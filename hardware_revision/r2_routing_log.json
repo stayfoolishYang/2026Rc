@@ -1,0 +1,443 @@
+[
+  {
+    "net": "IN12V",
+    "from": "P2.1",
+    "to": "SW2.2",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "$1N1669",
+    "from": "U20.1",
+    "to": "SW2.3",
+    "width": 60,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U20.2",
+    "to": "U21.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U21.1",
+    "to": "U18.6",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U18.6",
+    "to": "U18.5",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U18.6",
+    "to": "U1.6",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U1.6",
+    "to": "U1.5",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U1.6",
+    "to": "U9.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U9.1",
+    "to": "U14.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U14.1",
+    "to": "U11.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U11.1",
+    "to": "U12.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U12.1",
+    "to": "U16.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "12V",
+    "from": "U16.1",
+    "to": "U13.1",
+    "width": 80,
+    "routed": true
+  },
+  {
+    "net": "7.4V",
+    "from": "J9.2",
+    "to": "J10.2",
+    "width": 60,
+    "routed": true
+  },
+  {
+    "net": "7.4V",
+    "from": "J10.2",
+    "to": "U1.1",
+    "width": 60,
+    "routed": true
+  },
+  {
+    "net": "7.4V",
+    "from": "U1.1",
+    "to": "U1.2",
+    "width": 60,
+    "routed": true
+  },
+  {
+    "net": "7.4V",
+    "from": "J9.2",
+    "to": "J11.2",
+    "width": 60,
+    "routed": true
+  },
+  {
+    "net": "7.4V",
+    "from": "U1.2",
+    "to": "J12.2",
+    "width": 60,
+    "routed": true
+  },
+  {
+    "net": "5V",
+    "from": "U18.2",
+    "to": "U18.1",
+    "width": 50,
+    "routed": true
+  },
+  {
+    "net": "5V",
+    "from": "U18.1",
+    "to": "U23.6",
+    "width": 50,
+    "routed": true
+  },
+  {
+    "net": "5V",
+    "from": "U23.6",
+    "to": "U4.77",
+    "width": 50,
+    "routed": true
+  },
+  {
+    "net": "5V",
+    "from": "U4.77",
+    "to": "U4.76",
+    "width": 50,
+    "routed": true
+  },
+  {
+    "net": "5V",
+    "from": "U4.76",
+    "to": "USB1.1",
+    "width": 50,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U4.2",
+    "to": "U4.1",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U4.2",
+    "to": "U23.5",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U23.5",
+    "to": "U13.3",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U13.3",
+    "to": "U16.3",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U16.3",
+    "to": "U12.3",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U12.3",
+    "to": "U11.3",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U11.3",
+    "to": "U14.3",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "3.3V",
+    "from": "U14.3",
+    "to": "U9.3",
+    "width": 20,
+    "routed": true
+  },
+  {
+    "net": "SERVO2",
+    "from": "J9.1",
+    "to": "U4.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "SERVO1",
+    "from": "U4.28",
+    "to": "J11.1",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "SERVO4",
+    "from": "U4.67",
+    "to": "J12.1",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "ENM",
+    "from": "U4.33",
+    "to": "U9.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "ENM",
+    "from": "U9.4",
+    "to": "U14.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "ENM",
+    "from": "U14.4",
+    "to": "U11.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "ENM",
+    "from": "U11.4",
+    "to": "U12.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "ENM",
+    "from": "U12.4",
+    "to": "U16.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "SDA",
+    "from": "U4.63",
+    "to": "U22.7",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "SCL",
+    "from": "U4.62",
+    "to": "U22.6",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "SERVO3",
+    "from": "J10.1",
+    "to": "U4.30",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "TX2",
+    "from": "U4.87",
+    "to": "U22.1",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "RX2",
+    "from": "U4.61",
+    "to": "U22.8",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "PE3",
+    "from": "U4.81",
+    "to": "U23.3",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "PE6",
+    "from": "U4.82",
+    "to": "U23.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "STEP4",
+    "from": "U4.73",
+    "to": "U12.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "STEP8",
+    "from": "U4.72",
+    "to": "U16.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "DIR4",
+    "from": "U4.74",
+    "to": "U12.6",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "ENM2",
+    "from": "U4.86",
+    "to": "U13.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "RX4",
+    "from": "U4.95",
+    "to": "U22.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "DIR8",
+    "from": "U4.66",
+    "to": "U16.6",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "TX5",
+    "from": "U4.94",
+    "to": "U22.3",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "TX4",
+    "from": "U4.70",
+    "to": "U22.4",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "STEP5",
+    "from": "U4.59",
+    "to": "U13.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "RX5",
+    "from": "U4.69",
+    "to": "U22.2",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "DIR1",
+    "from": "U4.6",
+    "to": "U9.6",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "STEP1",
+    "from": "U4.5",
+    "to": "U9.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "STEP3",
+    "from": "U4.99",
+    "to": "U11.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "STEP7",
+    "from": "U4.98",
+    "to": "U14.5",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "DIR5",
+    "from": "U4.55",
+    "to": "U13.6",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "DIR3",
+    "from": "U4.100",
+    "to": "U11.6",
+    "width": 10,
+    "routed": true
+  },
+  {
+    "net": "DIR7",
+    "from": "U4.97",
+    "to": "U14.6",
+    "width": 10,
+    "routed": true
+  }
+]

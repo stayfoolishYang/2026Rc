@@ -19,6 +19,5 @@ py -3 "%~dp0stm32_hardware_tuning_gui.py" %*
 exit /b %errorlevel%
 
 :run_python
-python "%~dp0stm32_hardware_tuning_gui.py" %*
 exit /b %errorlevel%
 endlocal

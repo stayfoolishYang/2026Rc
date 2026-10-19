@@ -33,3 +33,16 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local agent/tooling state
+.serena/
+.workbuddy-ai/
+
+# Local run evidence and working notes
+diagnostics/
+task_plan.md
+findings.md
+progress.md
+
+# Local review copies of board projects
+*_review_*.epro

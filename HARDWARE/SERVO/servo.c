@@ -9,7 +9,7 @@
 *********************************/
 #define SERVO_TIM5_CH2_INIT_PULSE_US 2500u
 #define SERVO_TIM5_CH3_INIT_PULSE_US  850u
-#define SERVO_TIM5_CH4_INIT_PULSE_US  678u
+#define SERVO_TIM5_CH4_INIT_PULSE_US    0u
 
 static void Servo_TIM5_Init(void)
 {

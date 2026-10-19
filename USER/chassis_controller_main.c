@@ -15,39 +15,49 @@
  *   6: signed Y fine movement in mm, payload[2] (int8)
  *   7/8/9/10/12: pick from front and place to disc 1/2/3/4/5
  *   14/15/16/17/18: reverse disc 1/2/3/4/5 back to front
- *   21/22: grab a cuboid from the ground with claw pre-close and a quick
- *          turntable wiggle, then store it on disc 2 / disc 4
  *   33/34/35: task 2, disc 1/3/5 to champion/runner-up/third-place
  *   36: Servo1 task 2 extension position
  *   52: Servo1 retract to 270 degrees
  *   58: lift to 178 mm
  *   59: lift to 186 mm
- *   70: Servo2 claw calibration baseline
+ *   70: open the Servo2 claw
+ *   71: close the Servo2 claw at SERVO2_CLAMP_PULSE_US
  *   80/81/82: hardware-tuning pulse for Servo1/2/3, payload[1:2]
  *   83: hardware-tuning lift height in mm, payload[1:2]
- *   84: lift to the configured task 2 champion podium height
- *   85: lift to the configured task 2 runner-up podium height
+ *   84: lift to the configured high camera-target height
+ *   85: lift to the configured low camera-target height
  *   86: Servo3 turntable home (24 degrees)
  *   87: enable the task 2 chassis profile and acceleration/deceleration ramps
  *   88: restore the task 1 chassis profile
  *   89: arm the PE6 start button after startup preparation
+ *   90: one wheel, payload[1]=MOTOR3/4/7/8, [2]=DIR, [3:4]=pulses,
+ *       [5:6]=nominal half-period us; polled STOP accepted during test
+ *   91: stop component tests and remove the three servo PWM signals
+ *   92: lift test, [1:2]=target mm, [3:4]=nominal half-period us, target 0-360 mm
+ *   93: component-test capability probe (no movement)
+ *   94: one servo, [1]=1/2/3, [2:3]=pulse us (ACK means signal applied)
+ *   95: read PE6 level without arming the competition start button
  *
  * STM32 -> Raspberry Pi:
  *   FF 02 FE: controller ready
  *   FF 01 FE: command completed
  *   FF 00 FE: unsupported/invalid command
  *   FF 03 FE: PE6 start button pressed
+ *   FF 04 FE: component test stopped, servo PWM signals removed
+ *   FF 05/06 FE: PE6 low/high snapshot
+ *   FF 07 FE: component-test protocol supported
  */
 
-#define CHASSIS_STEP_HALF_PERIOD_US        70u
-#define CHASSIS_SHORT_STEP_HALF_PERIOD_US 120u
-#define CHASSIS_TASK2_LONG_STEP_HALF_PERIOD_US 120u
-#define CHASSIS_SLOW_SHORT_STEP_HALF_PERIOD_US 160u
-#define CHASSIS_ROTATE_SLOW_STEP_HALF_PERIOD_US 300u
+#define CHASSIS_STEP_HALF_PERIOD_US        75u
+#define CHASSIS_SHORT_STEP_HALF_PERIOD_US 100u
+#define CHASSIS_TASK2_LONG_STEP_HALF_PERIOD_US 150u
+#define CHASSIS_SLOW_SHORT_STEP_HALF_PERIOD_US 200u
+#define CHASSIS_ROTATE_SLOW_STEP_HALF_PERIOD_US 100u
 #define CHASSIS_TASK2_STOP_HALF_PERIOD_US 350u
 #define CHASSIS_TASK2_RAMP_PULSES         700u
-#define CHASSIS_FINE_STEP_HALF_PERIOD_US  350u
-#define CHASSIS_RAMP_START_HALF_PERIOD_US 220u
+#define CHASSIS_FINE_STEP_HALF_PERIOD_US  200u
+#define CHASSIS_TASK2_FINE_STEP_HALF_PERIOD_US 600u
+#define CHASSIS_RAMP_START_HALF_PERIOD_US 200u
 #define CHASSIS_RAMP_PULSES               700u
 #define CHASSIS_RAMP_MIN_DISTANCE_MM      500u
 #define CHASSIS_DIRECTION_SETTLE_MS        20u
@@ -57,25 +67,23 @@
     ((CHASSIS_READY_REPEAT_MS * 1000u) / UART_RX_POLL_INTERVAL_US)
 
 /* Software-init arm pose: turntable home, lift to 15 cm, claw baseline, retract. */
-#define SERVO1_RETRACT_PULSE_US            2500u  /* 270 degrees. */
+#define SERVO1_DISC_ALIGN_PULSE_US         2455u  /* Default retracted position, also used for disc alignment. */
 #define SERVO1_TASK2_EXTEND_PULSE_US         946u  /* 60 degrees. */
-#define SERVO2_BOTTOM_OPEN_PULSE_US         765u  /* 45 degrees at home. */
-#define SERVO2_DISC_RELEASE_PULSE_US       1201u  /* Match the proven disc-pick clearance. */
-#define SERVO2_DISC_PICK_OPEN_PULSE_US     1202u  /* Disc 1/2/4/5 pickup clearance. */
-#define SERVO2_DISC3_PICK_OPEN_PULSE_US    1215u  /* Independent disc 3 pickup clearance. */
-#define SERVO2_TASK2_RELEASE_PULSE_US      1173u  /* 80 degrees. */
-#define SERVO2_GROUND_RELEASE_STAGE_PULSE_US 1018u /* 80 degrees before full ground release. */
-#define SERVO2_CLAMP_PULSE_US              1270u  /* 100 degrees. */
-#define SERVO2_CUBOID_PRE_CLOSE_PULSE_US    1018u  /* Cuboid pre-close before the wiggle. */
-#define SERVO3_HOME_PULSE_US                678u  /* 24 degrees. */
-#define SERVO3_CUBOID_WIGGLE_LOW_PULSE_US    500u  /* 0 degrees. */
-#define SERVO3_CUBOID_WIGGLE_HIGH_PULSE_US   856u  /* 48 degrees. */
-#define SERVO3_CUBOID_WIGGLE_STEP_MS         150u  /* Quick step settle for the wiggle. */
-#define SERVO3_DISC1_PULSE_US              1675u  /* 158 degrees. */
-#define SERVO3_DISC2_PULSE_US              1855u  /* 183 degrees. */
-#define SERVO3_DISC3_PULSE_US              2014u  /* Calibrated disc 3 position. */
-#define SERVO3_PUT_DISC4_PULSE_US          2183u  /* 226 degrees for task1 grub/put. */
-#define SERVO3_DISC5_PULSE_US              2352u  /* 250 degrees for task1/task2. */
+/* Four task claw states, shared by every disc and both tasks. */
+#define SERVO2_BOTTOM_OPEN_PULSE_US         765u  /* Ground pickup/release and podium release. */
+#define SERVO2_DISC_RELEASE_PULSE_US       1200u  /* Release after descending onto a disc. */
+#define SERVO2_DISC_PICK_OPEN_PULSE_US     1200u  /* Open at transfer height before disc pickup. */
+#define SERVO2_CLAMP_PULSE_US              1350u  /* Hold the object for lifting/transferring. */
+/* 2/4-disc cuboids: ground opening stays the common bottom-open value. */
+#define SERVO2_CUBE_GROUND_CLAMP_PULSE_US  1360u  /* Cuboid clamp after ground pickup. */
+#define SERVO2_CUBE_DISC_OPEN_PULSE_US     1200u  /* Cuboid disc pickup opening. */
+#define SERVO2_CUBE_DISC_CLAMP_PULSE_US    1360u  /* Cuboid clamp after disc pickup. */
+#define SERVO3_HOME_PULSE_US                663u  /* 24 degrees. */
+#define SERVO3_DISC1_PULSE_US              1575u  /* 158 degrees. */
+#define SERVO3_DISC2_PULSE_US              1790u  /* 183 degrees. */
+#define SERVO3_DISC3_PULSE_US              2004u  /* Calibrated disc 3 position. */
+#define SERVO3_PUT_DISC4_PULSE_US          2243u  /* 226 degrees for task1 grub/put. */
+#define SERVO3_DISC5_PULSE_US              2452u  /* 250 degrees for task1/task2. */
 #define SERVO_POWER_ON_SETTLE_MS            500u
 #define SERVO1_SETTLE_MS                    200u
 #define SERVO2_SETTLE_MS                    380u
@@ -87,40 +95,39 @@
 /* Per-disc/per-operation timing for the grab/place task routines
  * (all in ms). Defaults keep the previous shared settle/hold behaviour;
  * tune each value to shorten the race run. Task1 grabs/puts are
- * independent per disc; task2 grab/place and cuboid grab use their
- * own shared sets. */
-#define GRUB1_OPEN_WAIT_MS                      380u
-#define GRUB1_CLAMP_WAIT_MS                     380u
+ * independent per disc; task2 grab/place use their own shared sets. */
+#define GRUB1_OPEN_WAIT_MS                      250u
+#define GRUB1_CLAMP_WAIT_MS                     350u
 #define GRUB1_CLAMP_HOLD_MS                     200u
-#define GRUB1_TURNTABLE_WAIT_MS                 850u
+#define GRUB1_TURNTABLE_WAIT_MS                 400u
 #define GRUB1_RELEASE_WAIT_MS                   380u
 #define GRUB1_RELEASE_HOLD_MS                   200u
-#define GRUB1_HOME_WAIT_MS                      500u
-#define GRUB1_OPEN_AFTER_HOME_WAIT_MS           380u
-#define GRUB2_OPEN_WAIT_MS                      380u
-#define GRUB2_CLAMP_WAIT_MS                     380u
-#define GRUB2_CLAMP_HOLD_MS                     200u
-#define GRUB2_TURNTABLE_WAIT_MS                 850u
-#define GRUB2_RELEASE_WAIT_MS                   380u
+#define GRUB1_HOME_WAIT_MS                      300u
+#define GRUB1_OPEN_AFTER_HOME_WAIT_MS           200u
+#define GRUB2_OPEN_WAIT_MS                      300u
+#define GRUB2_CLAMP_WAIT_MS                     400u
+#define GRUB2_CLAMP_HOLD_MS                     400u
+#define GRUB2_TURNTABLE_WAIT_MS                 500u
+#define GRUB2_RELEASE_WAIT_MS                   200u
 #define GRUB2_RELEASE_HOLD_MS                   200u
-#define GRUB2_HOME_WAIT_MS                      500u
-#define GRUB2_OPEN_AFTER_HOME_WAIT_MS           380u
-#define GRUB3_OPEN_WAIT_MS                      380u
-#define GRUB3_CLAMP_WAIT_MS                     380u
-#define GRUB3_CLAMP_HOLD_MS                     200u
-#define GRUB3_TURNTABLE_WAIT_MS                 850u
-#define GRUB3_RELEASE_WAIT_MS                   380u
+#define GRUB2_HOME_WAIT_MS                      200u
+#define GRUB2_OPEN_AFTER_HOME_WAIT_MS           150u
+#define GRUB3_OPEN_WAIT_MS                      300u
+#define GRUB3_CLAMP_WAIT_MS                     300u
+#define GRUB3_CLAMP_HOLD_MS                     300u
+#define GRUB3_TURNTABLE_WAIT_MS                 600u
+#define GRUB3_RELEASE_WAIT_MS                   200u
 #define GRUB3_RELEASE_HOLD_MS                   200u
-#define GRUB3_HOME_WAIT_MS                      500u
-#define GRUB3_OPEN_AFTER_HOME_WAIT_MS           380u
-#define GRUB4_OPEN_WAIT_MS                      380u
-#define GRUB4_CLAMP_WAIT_MS                     380u
-#define GRUB4_CLAMP_HOLD_MS                     200u
-#define GRUB4_TURNTABLE_WAIT_MS                 850u
-#define GRUB4_RELEASE_WAIT_MS                   380u
+#define GRUB3_HOME_WAIT_MS                      450u
+#define GRUB3_OPEN_AFTER_HOME_WAIT_MS           200u
+#define GRUB4_OPEN_WAIT_MS                      300u
+#define GRUB4_CLAMP_WAIT_MS                     300u
+#define GRUB4_CLAMP_HOLD_MS                     350u
+#define GRUB4_TURNTABLE_WAIT_MS                 700u
+#define GRUB4_RELEASE_WAIT_MS                   200u
 #define GRUB4_RELEASE_HOLD_MS                   200u
 #define GRUB4_HOME_WAIT_MS                      500u
-#define GRUB4_OPEN_AFTER_HOME_WAIT_MS           380u
+#define GRUB4_OPEN_AFTER_HOME_WAIT_MS           200u
 #define GRUB5_OPEN_WAIT_MS                      380u
 #define GRUB5_CLAMP_WAIT_MS                     380u
 #define GRUB5_CLAMP_HOLD_MS                     200u
@@ -129,56 +136,56 @@
 #define GRUB5_RELEASE_HOLD_MS                   200u
 #define GRUB5_HOME_WAIT_MS                      500u
 #define GRUB5_OPEN_AFTER_HOME_WAIT_MS           380u
-#define TASK2_GRUB1_OPEN_WAIT_MS                      380u
-#define TASK2_GRUB1_CLAMP_WAIT_MS                     380u
+#define TASK2_GRUB1_OPEN_WAIT_MS                      300u
+#define TASK2_GRUB1_CLAMP_WAIT_MS                     300u
 #define TASK2_GRUB1_CLAMP_HOLD_MS                     200u
-#define TASK2_GRUB1_TURNTABLE_WAIT_MS                 850u
-#define TASK2_GRUB1_RELEASE_WAIT_MS                   380u
+#define TASK2_GRUB1_TURNTABLE_WAIT_MS                 400u
+#define TASK2_GRUB1_RELEASE_WAIT_MS                   300u
 #define TASK2_GRUB1_RELEASE_HOLD_MS                   200u
-#define TASK2_GRUB1_HOME_WAIT_MS                      500u
-#define TASK2_GRUB1_OPEN_AFTER_HOME_WAIT_MS           380u
-#define TASK2_GRUB3_OPEN_WAIT_MS                      380u
+#define TASK2_GRUB1_HOME_WAIT_MS                      400u
+#define TASK2_GRUB1_OPEN_AFTER_HOME_WAIT_MS           200u
+#define TASK2_GRUB3_OPEN_WAIT_MS                      200u
 #define TASK2_GRUB3_CLAMP_WAIT_MS                     380u
-#define TASK2_GRUB3_CLAMP_HOLD_MS                     200u
-#define TASK2_GRUB3_TURNTABLE_WAIT_MS                 850u
+#define TASK2_GRUB3_CLAMP_HOLD_MS                     380u
+#define TASK2_GRUB3_TURNTABLE_WAIT_MS                 600u
 #define TASK2_GRUB3_RELEASE_WAIT_MS                   380u
 #define TASK2_GRUB3_RELEASE_HOLD_MS                   200u
-#define TASK2_GRUB3_HOME_WAIT_MS                      500u
-#define TASK2_GRUB3_OPEN_AFTER_HOME_WAIT_MS           380u
+#define TASK2_GRUB3_HOME_WAIT_MS                      600u
+#define TASK2_GRUB3_OPEN_AFTER_HOME_WAIT_MS           200u
 #define TASK2_GRUB5_OPEN_WAIT_MS                      380u
 #define TASK2_GRUB5_CLAMP_WAIT_MS                     380u
 #define TASK2_GRUB5_CLAMP_HOLD_MS                     200u
-#define TASK2_GRUB5_TURNTABLE_WAIT_MS                 850u
-#define TASK2_GRUB5_RELEASE_WAIT_MS                   380u
+#define TASK2_GRUB5_TURNTABLE_WAIT_MS                 800u
+#define TASK2_GRUB5_RELEASE_WAIT_MS                   200u
 #define TASK2_GRUB5_RELEASE_HOLD_MS                   200u
 #define TASK2_GRUB5_HOME_WAIT_MS                      500u
-#define TASK2_GRUB5_OPEN_AFTER_HOME_WAIT_MS           380u
-#define PUT1_TURNTABLE_WAIT_MS                 850u
-#define PUT1_PICK_OPEN_WAIT_MS                 380u
-#define PUT1_CLAMP_WAIT_MS                     380u
+#define TASK2_GRUB5_OPEN_AFTER_HOME_WAIT_MS           100u
+#define PUT1_TURNTABLE_WAIT_MS                 400u
+#define PUT1_PICK_OPEN_WAIT_MS                 200u
+#define PUT1_CLAMP_WAIT_MS                     150u
 #define PUT1_CLAMP_HOLD_MS                     200u
-#define PUT1_HOME_WAIT_MS                      850u
+#define PUT1_HOME_WAIT_MS                      400u
 #define PUT1_STAGE_INTERVAL_MS                 100u
 #define PUT1_FINAL_OPEN_HOLD_MS                0u
-#define PUT2_TURNTABLE_WAIT_MS                 850u
-#define PUT2_PICK_OPEN_WAIT_MS                 380u
-#define PUT2_CLAMP_WAIT_MS                     380u
+#define PUT2_TURNTABLE_WAIT_MS                 200u
+#define PUT2_PICK_OPEN_WAIT_MS                 200u
+#define PUT2_CLAMP_WAIT_MS                     200u
 #define PUT2_CLAMP_HOLD_MS                     200u
-#define PUT2_HOME_WAIT_MS                      850u
+#define PUT2_HOME_WAIT_MS                      450u
 #define PUT2_STAGE_INTERVAL_MS                 100u
 #define PUT2_FINAL_OPEN_HOLD_MS                0u
-#define PUT3_TURNTABLE_WAIT_MS                 850u
-#define PUT3_PICK_OPEN_WAIT_MS                 380u
-#define PUT3_CLAMP_WAIT_MS                     380u
+#define PUT3_TURNTABLE_WAIT_MS                 380u
+#define PUT3_PICK_OPEN_WAIT_MS                 200u
+#define PUT3_CLAMP_WAIT_MS                     200u
 #define PUT3_CLAMP_HOLD_MS                     200u
-#define PUT3_HOME_WAIT_MS                      850u
+#define PUT3_HOME_WAIT_MS                      500u
 #define PUT3_STAGE_INTERVAL_MS                 100u
 #define PUT3_FINAL_OPEN_HOLD_MS                0u
-#define PUT4_TURNTABLE_WAIT_MS                 850u
-#define PUT4_PICK_OPEN_WAIT_MS                 380u
-#define PUT4_CLAMP_WAIT_MS                     380u
-#define PUT4_CLAMP_HOLD_MS                     200u
-#define PUT4_HOME_WAIT_MS                      850u
+#define PUT4_TURNTABLE_WAIT_MS                 500u
+#define PUT4_PICK_OPEN_WAIT_MS                 300u
+#define PUT4_CLAMP_WAIT_MS                     300u
+#define PUT4_CLAMP_HOLD_MS                     300u
+#define PUT4_HOME_WAIT_MS                      500u
 #define PUT4_STAGE_INTERVAL_MS                 100u
 #define PUT4_FINAL_OPEN_HOLD_MS                0u
 #define PUT5_TURNTABLE_WAIT_MS                 850u
@@ -189,42 +196,32 @@
 #define PUT5_STAGE_INTERVAL_MS                 100u
 #define PUT5_FINAL_OPEN_HOLD_MS                0u
 #define TASK2_PLACE1_RETRACT_WAIT_MS                   200u
-#define TASK2_PLACE1_TURNTABLE_WAIT_MS                 850u
+#define TASK2_PLACE1_TURNTABLE_WAIT_MS                 400u
 #define TASK2_PLACE1_RELEASE_WAIT_MS                   380u
 #define TASK2_PLACE1_CLAMP_WAIT_MS                     380u
 #define TASK2_PLACE1_CLAMP_HOLD_MS                     200u
 #define TASK2_PLACE1_EXTEND_WAIT_MS                    200u
-#define TASK2_PLACE1_HOME_WAIT_MS                      850u
-#define TASK2_PLACE1_OPEN_WAIT_MS                      380u
+#define TASK2_PLACE1_HOME_WAIT_MS                      400u
+#define TASK2_PLACE1_OPEN_WAIT_MS                      200u
 #define TASK2_PLACE1_OPEN_HOLD_MS                      200u
 #define TASK2_PLACE2_RETRACT_WAIT_MS                   200u
-#define TASK2_PLACE2_TURNTABLE_WAIT_MS                 850u
+#define TASK2_PLACE2_TURNTABLE_WAIT_MS                 600u
 #define TASK2_PLACE2_RELEASE_WAIT_MS                   380u
-#define TASK2_PLACE2_CLAMP_WAIT_MS                     380u
-#define TASK2_PLACE2_CLAMP_HOLD_MS                     200u
-#define TASK2_PLACE2_EXTEND_WAIT_MS                    200u
-#define TASK2_PLACE2_HOME_WAIT_MS                      850u
-#define TASK2_PLACE2_OPEN_WAIT_MS                      380u
+#define TASK2_PLACE2_CLAMP_WAIT_MS                     200u
+#define TASK2_PLACE2_CLAMP_HOLD_MS                     300u
+#define TASK2_PLACE2_EXTEND_WAIT_MS                    250u
+#define TASK2_PLACE2_HOME_WAIT_MS                      600u
+#define TASK2_PLACE2_OPEN_WAIT_MS                      200u
 #define TASK2_PLACE2_OPEN_HOLD_MS                      200u
 #define TASK2_PLACE3_RETRACT_WAIT_MS                   200u
-#define TASK2_PLACE3_TURNTABLE_WAIT_MS                 850u
+#define TASK2_PLACE3_TURNTABLE_WAIT_MS                 750u
 #define TASK2_PLACE3_RELEASE_WAIT_MS                   380u
 #define TASK2_PLACE3_CLAMP_WAIT_MS                     380u
 #define TASK2_PLACE3_CLAMP_HOLD_MS                     200u
-#define TASK2_PLACE3_EXTEND_WAIT_MS                    200u
-#define TASK2_PLACE3_HOME_WAIT_MS                      850u
-#define TASK2_PLACE3_OPEN_WAIT_MS                      380u
-#define TASK2_PLACE3_OPEN_HOLD_MS                      200u
-#define CUBOID_OPEN_WAIT_MS                      380u
-#define CUBOID_PRE_CLOSE_WAIT_MS                 380u
-#define CUBOID_CLAMP_WAIT_MS                     380u
-#define CUBOID_CLAMP_HOLD_MS                     200u
-#define CUBOID_TURNTABLE_WAIT_MS                 850u
-#define CUBOID_RELEASE_WAIT_MS                   380u
-#define CUBOID_RELEASE_HOLD_MS                   200u
-#define CUBOID_HOME_WAIT_MS                      500u
-#define CUBOID_OPEN_AFTER_HOME_WAIT_MS           380u
-
+#define TASK2_PLACE3_EXTEND_WAIT_MS                    250u
+#define TASK2_PLACE3_HOME_WAIT_MS                      700u
+#define TASK2_PLACE3_OPEN_WAIT_MS                      100u
+#define TASK2_PLACE3_OPEN_HOLD_MS                      100u
 typedef struct {
     uint32_t open_wait_ms;
     uint32_t clamp_wait_ms;
@@ -257,18 +254,6 @@ typedef struct {
     uint32_t open_wait_ms;
     uint32_t open_hold_ms;
 } ArmTask2PlaceTiming;
-
-typedef struct {
-    uint32_t open_wait_ms;
-    uint32_t pre_close_wait_ms;
-    uint32_t clamp_wait_ms;
-    uint32_t clamp_hold_ms;
-    uint32_t turntable_wait_ms;
-    uint32_t release_wait_ms;
-    uint32_t release_hold_ms;
-    uint32_t home_wait_ms;
-    uint32_t open_after_home_wait_ms;
-} ArmCuboidTiming;
 
 static const ArmGrubTiming grub1_timing = {
     GRUB1_OPEN_WAIT_MS, GRUB1_CLAMP_WAIT_MS, GRUB1_CLAMP_HOLD_MS, GRUB1_TURNTABLE_WAIT_MS, GRUB1_RELEASE_WAIT_MS, GRUB1_RELEASE_HOLD_MS, GRUB1_HOME_WAIT_MS, GRUB1_OPEN_AFTER_HOME_WAIT_MS
@@ -330,20 +315,14 @@ static const ArmTask2PlaceTiming task2_place3_timing = {
     TASK2_PLACE3_RETRACT_WAIT_MS, TASK2_PLACE3_TURNTABLE_WAIT_MS, TASK2_PLACE3_RELEASE_WAIT_MS, TASK2_PLACE3_CLAMP_WAIT_MS, TASK2_PLACE3_CLAMP_HOLD_MS, TASK2_PLACE3_EXTEND_WAIT_MS, TASK2_PLACE3_HOME_WAIT_MS, TASK2_PLACE3_OPEN_WAIT_MS, TASK2_PLACE3_OPEN_HOLD_MS
 };
 
-static const ArmCuboidTiming cuboid_timing = {
-    CUBOID_OPEN_WAIT_MS, CUBOID_PRE_CLOSE_WAIT_MS, CUBOID_CLAMP_WAIT_MS, CUBOID_CLAMP_HOLD_MS, CUBOID_TURNTABLE_WAIT_MS, CUBOID_RELEASE_WAIT_MS, CUBOID_RELEASE_HOLD_MS, CUBOID_HOME_WAIT_MS, CUBOID_OPEN_AFTER_HOME_WAIT_MS
-};
-
 #define RPI_FRAME_PAYLOAD_SIZE               8u
-#define FIRMWARE_DIAGNOSTIC_VERSION         153u
+#define FIRMWARE_DIAGNOSTIC_VERSION         181u
 
 #define RPI_CMD_X_DISTANCE                    1u
 #define RPI_CMD_Y_DISTANCE                    2u
 #define RPI_CMD_ROTATE                        3u
 #define RPI_CMD_X_MM                          5u
 #define RPI_CMD_Y_MM                          6u
-#define RPI_CMD_GRUB_CUBOID_DISC2              21u
-#define RPI_CMD_GRUB_CUBOID_DISC4              22u
 #define RPI_CMD_GRUB_DISC1                    7u
 #define RPI_CMD_GRUB_DISC2                    8u
 #define RPI_CMD_GRUB_DISC3                    9u
@@ -370,43 +349,64 @@ static const ArmCuboidTiming cuboid_timing = {
 #define RPI_CMD_LIFT_178MM                   58u
 #define RPI_CMD_LIFT_186MM                   59u
 #define RPI_CMD_CLAW_OPEN                    70u
+#define RPI_CMD_CLAW_CLOSE                   71u
 #define RPI_CMD_SOFTWARE_INIT                72u
 #define RPI_CMD_TUNING_SERVO1_PULSE          80u
 #define RPI_CMD_TUNING_SERVO2_PULSE          81u
 #define RPI_CMD_TUNING_SERVO3_PULSE          82u
 #define RPI_CMD_TUNING_LIFT_HEIGHT           83u
-#define RPI_CMD_LIFT_CHAMPION_HEIGHT         84u
-#define RPI_CMD_LIFT_RUNNER_UP_HEIGHT        85u
+#define RPI_CMD_CAMERA_TARGET_HIGH           84u
+#define RPI_CMD_CAMERA_TARGET_LOW            85u
 #define RPI_CMD_SERVO3_HOME                  86u
 #define RPI_CMD_TASK2_CHASSIS_PROFILE       87u
 #define RPI_CMD_TASK1_CHASSIS_PROFILE       88u
 #define RPI_CMD_ARM_START_BUTTON            89u
+#define RPI_CMD_TEST_WHEEL                  90u
+#define RPI_CMD_TEST_STOP                   91u
+#define RPI_CMD_TEST_LIFT                   92u
+#define RPI_CMD_TEST_PROBE                  93u
+#define RPI_CMD_TEST_SERVO                  94u
+#define RPI_CMD_TEST_BUTTON                 95u
 #define RPI_CMD_GYRO_DIAGNOSTIC             126u
 
 #define COMMAND_RESULT_INVALID                0u
 #define COMMAND_RESULT_DONE                   1u
+#define COMMAND_RESULT_TEST_STOPPED           4u
+#define COMMAND_RESULT_BUTTON_LOW             5u
+#define COMMAND_RESULT_BUTTON_HIGH            6u
+#define COMMAND_RESULT_TEST_SUPPORTED         7u
+
+#define TEST_MAX_WHEEL_PULSES               3200u
+#define TEST_MIN_HALF_PERIOD_US                1u
 
 #define RPI_STATUS_START_BUTTON               3u
 #define START_BUTTON_DEBOUNCE_MS              20u
 
 #define LIFT_MIN_HEIGHT_MM                    0u
-#define LIFT_GROUND_PICK_HEIGHT_MM            10u
-#define LIFT_GROUND_PLACE_HEIGHT_MM          15u
+#define LIFT_GROUND_PICK_HEIGHT_MM            14u
+#define LIFT_GROUND_PLACE_HEIGHT_MM          11u
+/* Final field placement from discs 2/4; absolute software heights, not offsets. */
+#define LIFT_DISC2_STACK_PLACE_HEIGHT_MM     56u
+#define LIFT_DISC4_STACK_PLACE_HEIGHT_MM     56u
 #define LIFT_PICK_HEIGHT_MM                 170u
-#define LIFT_PLACE_HEIGHT_MM                160u
+#define LIFT_PLACE_HEIGHT_MM                163u
 #define LIFT_TRANSFER_HEIGHT_MM             250u
 #define LIFT_MID_HEIGHT_MM                  170u
-#define LIFT_MAX_HEIGHT_MM                  270u
+#define LIFT_MAX_HEIGHT_MM                  360u
 #define LIFT_178_HEIGHT_MM                  178u
 #define LIFT_186_HEIGHT_MM                  186u
-#define LIFT_TASK2_DISC_HEIGHT_MM           160u
-#define LIFT_TASK2_RETURN_CLEARANCE_MM      200u
-#define LIFT_TASK2_CHAMPION_HEIGHT_MM        40u
-#define LIFT_TASK2_RUNNER_UP_HEIGHT_MM       22u
-#define LIFT_TASK2_THIRD_PLACE_HEIGHT_MM     4u
+#define LIFT_TASK2_DISC_PLACE_HEIGHT_MM     163u
+#define LIFT_TASK2_TRANSFER_HEIGHT_MM       270u
+#define LIFT_TASK2_DISC_HEIGHT_MM           169u
+#define LIFT_TASK2_RETURN_CLEARANCE_MM      221u
+#define LIFT_TASK2_CHAMPION_PLACE_HEIGHT_MM  55u
+#define LIFT_TASK2_RUNNER_UP_PLACE_HEIGHT_MM 37u
+#define LIFT_TASK2_THIRD_PLACE_HEIGHT_MM     19u
+#define LIFT_CAMERA_TARGET_HIGH_HEIGHT_MM   36u
+#define LIFT_CAMERA_TARGET_LOW_HEIGHT_MM    18u
 #define LIFT_PULSES_PER_MM                   64u
 #define LIFT_STEP_HALF_PERIOD_US             15u
-/* Shared by disc pickup/placement, task 1 ground placement and task 2 podium placement. */
+/* Shared by disc pickup/placement, field/stack and podium placement. */
 #define LIFT_GROUND_SLOW_APPROACH_DISTANCE_MM 40u
 #define LIFT_GROUND_SLOW_STEP_HALF_PERIOD_US 120u
 #define LIFT_DIRECTION_SETTLE_MS             20u
@@ -435,8 +435,8 @@ static const ArmCuboidTiming cuboid_timing = {
 #define GYRO_RAW_PROBE_SAMPLES \
     ((GYRO_RAW_PROBE_DURATION_MS * 1000u) / GYRO_RAW_PROBE_SAMPLE_US)
 
-/* Validated chassis geometry/calibration:
- * wheel diameter 76 mm, 3200 pulses/rev, 7790 pulses/180 degrees. */
+/* Historical 1/16-microstep calibration. Do not retune this constant until
+ * the current non-linear wheel response and translation drift are fixed. */
 #define CHASSIS_LINEAR_PULSES_NUMERATOR   13403u
 #define CHASSIS_LINEAR_PULSES_DENOM_MM     1000u
 #define CHASSIS_ROTATE_180_PULSES          7790u
@@ -477,6 +477,8 @@ int16_t base_angle = 0;
 int16_t code1 = 0;
 int16_t code2 = 0;
 static uint16_t lift_height_mm = LIFT_MIN_HEIGHT_MM;
+/* Preserve the fractional mm if a component test is stopped mid-step. */
+static uint16_t lift_test_remainder_pulses = 0u;
 static uint8_t chassis_task2_profile_enabled = 0u;
 static uint8_t start_button_armed = 0u;
 static uint8_t start_button_released = 0u;
@@ -552,30 +554,36 @@ static float Chassis_HeadingError(float target, float actual)
     return error;
 }
 
+static void Arm_RestoreDiscAlignment(void)
+{
+    TIM_SetCompare2(TIM5, SERVO1_DISC_ALIGN_PULSE_US);
+    delay_ms(SERVO1_SETTLE_MS);
+}
+
 static void Arm_PWM_Init(void)
 {
     Servo1_Init();
     Servo2_Init();
     Servo3_Init();
 
-    /* Apply the safe competition startup pose after all TIM5 channels exist. */
-    TIM_SetCompare2(TIM5, SERVO1_RETRACT_PULSE_US);
-    TIM_SetCompare3(TIM5, SERVO2_BOTTOM_OPEN_PULSE_US);
-    TIM_SetCompare4(TIM5, SERVO3_HOME_PULSE_US);
+    /* Keep claw and bottom turntable uncommanded at power-on. */
+    TIM_SetCompare2(TIM5, SERVO1_DISC_ALIGN_PULSE_US);
+    TIM_SetCompare3(TIM5, 0u);
+    TIM_SetCompare4(TIM5, 0u);
 }
 
 static void Arm_SetPowerOnTurntableHome(void)
 {
     TIM_SetCompare4(TIM5, SERVO3_HOME_PULSE_US);
     delay_ms(SERVO3_SETTLE_MS);
-    TIM_SetCompare3(TIM5, SERVO2_DISC_RELEASE_PULSE_US);
+    TIM_SetCompare3(TIM5, SERVO2_DISC_PICK_OPEN_PULSE_US);
     delay_ms(SERVO2_SETTLE_MS);
 }
 
 static void Arm_SetPowerOnReadyPose(void)
 {
     TIM_SetCompare3(TIM5, SERVO2_BOTTOM_OPEN_PULSE_US);
-    TIM_SetCompare2(TIM5, SERVO1_RETRACT_PULSE_US);
+    TIM_SetCompare2(TIM5, SERVO1_DISC_ALIGN_PULSE_US);
     delay_ms(SERVO_POWER_ON_SETTLE_MS);
 }
 
@@ -606,8 +614,8 @@ static void Lift_GPIO_Init(void)
     lift_height_mm = LIFT_MIN_HEIGHT_MM;
 }
 
-static void Lift_MoveToHeightAtHalfPeriod(uint16_t target_height_mm,
-                                          uint32_t step_half_period_us)
+static void Lift_MoveToHeightRawAtHalfPeriod(uint16_t target_height_mm,
+                                             uint32_t step_half_period_us)
 {
     uint16_t distance_mm;
     uint32_t pulses;
@@ -640,6 +648,12 @@ static void Lift_MoveToHeightAtHalfPeriod(uint16_t target_height_mm,
 
     GPIO_ResetBits(GPIOB, GPIO_Pin_10);
     lift_height_mm = target_height_mm;
+}
+
+static void Lift_MoveToHeightAtHalfPeriod(uint16_t target_height_mm,
+                                          uint32_t step_half_period_us)
+{
+    Lift_MoveToHeightRawAtHalfPeriod(target_height_mm, step_half_period_us);
 }
 
 static void Lift_MoveToHeight(uint16_t target_height_mm)
@@ -826,11 +840,22 @@ static uint8_t Arm_IsPutMode(uint8_t mode)
             mode == RPI_CMD_PUT_DISC5) ? 1u : 0u;
 }
 
-static uint16_t Arm_DiscPickOpenPulseFromMode(uint8_t mode)
+static uint8_t Arm_IsCubeDiscMode(uint8_t mode)
 {
-    return (mode == RPI_CMD_PUT_DISC3) ?
-           SERVO2_DISC3_PICK_OPEN_PULSE_US :
-           SERVO2_DISC_PICK_OPEN_PULSE_US;
+    return (mode == RPI_CMD_GRUB_DISC2 || mode == RPI_CMD_GRUB_DISC4 ||
+            mode == RPI_CMD_PUT_DISC2 || mode == RPI_CMD_PUT_DISC4) ? 1u : 0u;
+}
+
+static uint16_t Arm_FieldPlaceHeightFromMode(uint8_t mode)
+{
+    switch (mode) {
+    case RPI_CMD_PUT_DISC2:
+        return LIFT_DISC2_STACK_PLACE_HEIGHT_MM;
+    case RPI_CMD_PUT_DISC4:
+        return LIFT_DISC4_STACK_PLACE_HEIGHT_MM;
+    default:
+        return LIFT_GROUND_PLACE_HEIGHT_MM;
+    }
 }
 
 static uint8_t Arm_Task2ParamsFromMode(uint8_t mode,
@@ -840,12 +865,12 @@ static uint8_t Arm_Task2ParamsFromMode(uint8_t mode,
     switch (mode) {
     case RPI_CMD_TASK2_PUT_1TO1:
         *disc_pulse_us = SERVO3_DISC1_PULSE_US;
-        *podium_height_mm = LIFT_TASK2_CHAMPION_HEIGHT_MM;
+        *podium_height_mm = LIFT_TASK2_CHAMPION_PLACE_HEIGHT_MM;
         return 1u;
 
     case RPI_CMD_TASK2_PUT_2TO2:
         *disc_pulse_us = SERVO3_DISC3_PULSE_US;
-        *podium_height_mm = LIFT_TASK2_RUNNER_UP_HEIGHT_MM;
+        *podium_height_mm = LIFT_TASK2_RUNNER_UP_PLACE_HEIGHT_MM;
         return 1u;
 
     case RPI_CMD_TASK2_PUT_3TO3:
@@ -879,14 +904,29 @@ static uint8_t Arm_Task2GrubPulseFromMode(uint8_t mode,
     }
 }
 
+static uint8_t Arm_Task2HeightsValid(void)
+{
+    return (LIFT_TASK2_TRANSFER_HEIGHT_MM <= LIFT_MAX_HEIGHT_MM &&
+            LIFT_TASK2_DISC_PLACE_HEIGHT_MM <= LIFT_MAX_HEIGHT_MM &&
+            LIFT_TASK2_DISC_HEIGHT_MM <= LIFT_MAX_HEIGHT_MM &&
+            LIFT_TASK2_RETURN_CLEARANCE_MM <= LIFT_MAX_HEIGHT_MM &&
+            LIFT_TASK2_TRANSFER_HEIGHT_MM > LIFT_TASK2_DISC_PLACE_HEIGHT_MM &&
+            LIFT_TASK2_TRANSFER_HEIGHT_MM > LIFT_TASK2_DISC_HEIGHT_MM &&
+            LIFT_TASK2_RETURN_CLEARANCE_MM > LIFT_TASK2_DISC_HEIGHT_MM &&
+            LIFT_TASK2_RETURN_CLEARANCE_MM >= LIFT_TASK2_CHAMPION_PLACE_HEIGHT_MM &&
+            LIFT_TASK2_RETURN_CLEARANCE_MM >= LIFT_TASK2_RUNNER_UP_PLACE_HEIGHT_MM &&
+            LIFT_TASK2_RETURN_CLEARANCE_MM >= LIFT_TASK2_THIRD_PLACE_HEIGHT_MM) ? 1u : 0u;
+}
+
 static void Arm_RunTask2Place(uint16_t disc_pulse_us,
                               uint16_t podium_height_mm,
                               const ArmTask2PlaceTiming *timing)
 {
-    Arm_Servo1MoveWait(SERVO1_RETRACT_PULSE_US, timing->retract_wait_ms);
-    Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
+    Arm_Servo1MoveWait(SERVO1_DISC_ALIGN_PULSE_US, timing->retract_wait_ms);
+    Lift_MoveToHeight(LIFT_TASK2_TRANSFER_HEIGHT_MM);
+    Arm_RestoreDiscAlignment();
     Arm_Servo3MoveWait(disc_pulse_us, timing->turntable_wait_ms);
-    Arm_Servo2MoveWait(SERVO2_TASK2_RELEASE_PULSE_US, timing->release_wait_ms);
+    Arm_Servo2MoveWait(SERVO2_DISC_PICK_OPEN_PULSE_US, timing->release_wait_ms);
 
     Lift_MoveToHeight(LIFT_TASK2_DISC_HEIGHT_MM);
     Arm_Servo2MoveWait(SERVO2_CLAMP_PULSE_US, timing->clamp_wait_ms);
@@ -904,95 +944,55 @@ static void Arm_RunTask2Place(uint16_t disc_pulse_us,
 }
 
 static void Arm_RunGrubToDisc(uint16_t disc_pulse_us,
-                              uint16_t disc_release_pulse_us,
+                              uint16_t ground_clamp_pulse_us,
+                              uint16_t disc_place_height_mm,
+                              uint16_t transfer_height_mm,
                               const ArmGrubTiming *timing)
 {
     Arm_Servo2MoveWait(SERVO2_BOTTOM_OPEN_PULSE_US, timing->open_wait_ms);
 
-    if (lift_height_mm != LIFT_GROUND_PICK_HEIGHT_MM) {
-        Lift_MoveToHeight(LIFT_GROUND_PICK_HEIGHT_MM);
-    }
-    Arm_Servo2MoveWait(SERVO2_CLAMP_PULSE_US, timing->clamp_wait_ms);
-    Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
+    /* Restore the default reach if task2 previously left Servo1 extended. */
+    Arm_Servo1Move(SERVO1_DISC_ALIGN_PULSE_US);
+    Lift_MoveToHeight(LIFT_GROUND_PICK_HEIGHT_MM);
+    Arm_Servo2MoveWait(ground_clamp_pulse_us, timing->clamp_wait_ms);
+    Lift_MoveToHeight(transfer_height_mm);
     delay_ms(timing->clamp_hold_ms);
 
+    Arm_RestoreDiscAlignment();
     Arm_Servo3MoveWait(disc_pulse_us, timing->turntable_wait_ms);
 
-    Lift_MoveToPlaceHeightSlow(LIFT_PLACE_HEIGHT_MM);
-    Arm_Servo2MoveWait(disc_release_pulse_us, timing->release_wait_ms);
+    Lift_MoveToPlaceHeightSlow(disc_place_height_mm);
+    Arm_Servo2MoveWait(SERVO2_DISC_RELEASE_PULSE_US, timing->release_wait_ms);
     delay_ms(timing->release_hold_ms);
 
-    Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
+    Lift_MoveToHeight(transfer_height_mm);
     Arm_Servo3MoveWait(SERVO3_HOME_PULSE_US, timing->home_wait_ms);
     Arm_Servo2MoveWait(SERVO2_BOTTOM_OPEN_PULSE_US, timing->open_after_home_wait_ms);
     Lift_MoveToHeight(LIFT_PICK_HEIGHT_MM);
 }
 
 static void Arm_RunPutFromDisc(uint16_t disc_pulse_us,
-                               uint16_t disc_pick_open_pulse_us,
+                               uint16_t disc_open_pulse_us,
+                               uint16_t disc_clamp_pulse_us,
+                               uint16_t field_place_height_mm,
                                const ArmPutTiming *timing)
 {
     Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
+    Arm_RestoreDiscAlignment();
     Arm_Servo3MoveWait(disc_pulse_us, timing->turntable_wait_ms);
-    Arm_Servo2MoveWait(disc_pick_open_pulse_us, timing->pick_open_wait_ms);
+    Arm_Servo2MoveWait(disc_open_pulse_us, timing->pick_open_wait_ms);
 
     Lift_MoveToPlaceHeightSlow(LIFT_PLACE_HEIGHT_MM);
-    Arm_Servo2MoveWait(SERVO2_CLAMP_PULSE_US, timing->clamp_wait_ms);
+    Arm_Servo2MoveWait(disc_clamp_pulse_us, timing->clamp_wait_ms);
     delay_ms(timing->clamp_hold_ms);
 
     Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
     Arm_Servo3MoveWait(SERVO3_HOME_PULSE_US, timing->home_wait_ms);
 
-    Lift_MoveToPlaceHeightSlow(LIFT_GROUND_PLACE_HEIGHT_MM);
-    TIM_SetCompare3(TIM5, SERVO2_GROUND_RELEASE_STAGE_PULSE_US);
+    Lift_MoveToPlaceHeightSlow(field_place_height_mm);
+    Arm_Servo2MoveWait(SERVO2_BOTTOM_OPEN_PULSE_US, SERVO2_SETTLE_MS);
     delay_ms(timing->stage_interval_ms);
-    TIM_SetCompare3(TIM5, SERVO2_BOTTOM_OPEN_PULSE_US);
     delay_ms(timing->final_open_hold_ms);
-    Lift_MoveToHeight(LIFT_PICK_HEIGHT_MM);
-}
-
-static void Arm_TurntableWiggleCuboid(void)
-{
-    /* Quick two-swing wiggle around HOME so the cuboid face aligns
-     * with the claw: 24 -> 0 -> 24, then 24 -> 48 -> 24. */
-    TIM_SetCompare4(TIM5, SERVO3_CUBOID_WIGGLE_LOW_PULSE_US);
-    delay_ms(SERVO3_CUBOID_WIGGLE_STEP_MS);
-    TIM_SetCompare4(TIM5, SERVO3_HOME_PULSE_US);
-    delay_ms(SERVO3_CUBOID_WIGGLE_STEP_MS);
-
-    TIM_SetCompare4(TIM5, SERVO3_CUBOID_WIGGLE_HIGH_PULSE_US);
-    delay_ms(SERVO3_CUBOID_WIGGLE_STEP_MS);
-    TIM_SetCompare4(TIM5, SERVO3_HOME_PULSE_US);
-    delay_ms(SERVO3_CUBOID_WIGGLE_STEP_MS);
-}
-
-static void Arm_RunGrubCuboid(uint16_t disc_pulse_us,
-                              const ArmCuboidTiming *timing)
-{
-    Arm_Servo2MoveWait(SERVO2_BOTTOM_OPEN_PULSE_US, timing->open_wait_ms);
-
-    if (lift_height_mm != LIFT_GROUND_PICK_HEIGHT_MM) {
-        Lift_MoveToHeight(LIFT_GROUND_PICK_HEIGHT_MM);
-    }
-
-    /* Pre-close the claw around the cuboid, then wiggle the turntable
-     * so the cuboid face is gripped squarely before the full clamp. */
-    Arm_Servo2MoveWait(SERVO2_CUBOID_PRE_CLOSE_PULSE_US, timing->pre_close_wait_ms);
-    Arm_TurntableWiggleCuboid();
-
-    Arm_Servo2MoveWait(SERVO2_CLAMP_PULSE_US, timing->clamp_wait_ms);
-    Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
-    delay_ms(timing->clamp_hold_ms);
-
-    Arm_Servo3MoveWait(disc_pulse_us, timing->turntable_wait_ms);
-
-    Lift_MoveToPlaceHeightSlow(LIFT_PLACE_HEIGHT_MM);
-    Arm_Servo2MoveWait(SERVO2_DISC_RELEASE_PULSE_US, timing->release_wait_ms);
-    delay_ms(timing->release_hold_ms);
-
-    Lift_MoveToHeight(LIFT_TRANSFER_HEIGHT_MM);
-    Arm_Servo3MoveWait(SERVO3_HOME_PULSE_US, timing->home_wait_ms);
-    Arm_Servo2MoveWait(SERVO2_BOTTOM_OPEN_PULSE_US, timing->open_after_home_wait_ms);
     Lift_MoveToHeight(LIFT_PICK_HEIGHT_MM);
 }
 
@@ -1178,34 +1178,168 @@ static void Chassis_GPIO_Init(void)
     GPIO_ResetBits(GPIOD, GPIO_Pin_7);
 }
 
+/* Component tests use only the selected STEP/DIR pair. Shared EN pins stay
+ * enabled so stopping a wheel does not release the lift's holding torque. */
+static void HardwareTest_Stop(void)
+{
+    GPIO_ResetBits(GPIOC, CHASSIS_STEP_PINS);
+    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
+    TIM_SetCompare2(TIM5, 0u);
+    TIM_SetCompare3(TIM5, 0u);
+    TIM_SetCompare4(TIM5, 0u);
+}
+
+/* Poll at 100 us intervals even at the slowest test speed. Without this,
+ * USART1's polled receiver would overrun and lose a STOP frame. */
+static uint8_t HardwareTest_Wait(uint16_t duration_us)
+{
+    uint8_t payload[RPI_FRAME_PAYLOAD_SIZE];
+    uint16_t slice_us;
+
+    while (duration_us != 0u) {
+        if (Chassis_TryReadFrame(payload) != 0u) {
+            if (payload[0] == RPI_CMD_TEST_STOP) {
+                HardwareTest_Stop();
+                return 0u;
+            }
+            /* No other operation may start while a component is moving. */
+            Chassis_SendStatus(COMMAND_RESULT_INVALID);
+        }
+        slice_us = (duration_us > 100u) ? 100u : duration_us;
+        delay_us(slice_us);
+        duration_us -= slice_us;
+    }
+    return 1u;
+}
+
+static uint8_t HardwareTest_Wheel(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZE])
+{
+    GPIO_TypeDef *dir_port;
+    uint16_t dir_pin;
+    uint16_t step_pin;
+    uint16_t pulses = Chassis_ReadUInt16(payload[3], payload[4]);
+    uint16_t half_period_us = Chassis_ReadUInt16(payload[5], payload[6]);
+    uint16_t pulse;
+
+    if (payload[2] > 1u || pulses == 0u || pulses > TEST_MAX_WHEEL_PULSES ||
+        half_period_us < TEST_MIN_HALF_PERIOD_US || payload[7] != 0u) {
+        return COMMAND_RESULT_INVALID;
+    }
+    switch (payload[1]) {
+    case 3u: dir_port = GPIOG; dir_pin = GPIO_Pin_7; step_pin = GPIO_Pin_6; break;
+    case 4u: dir_port = GPIOG; dir_pin = GPIO_Pin_8; step_pin = GPIO_Pin_7; break;
+    case 7u: dir_port = GPIOA; dir_pin = GPIO_Pin_8; step_pin = GPIO_Pin_8; break;
+    case 8u: dir_port = GPIOC; dir_pin = GPIO_Pin_1; step_pin = GPIO_Pin_9; break;
+    default: return COMMAND_RESULT_INVALID;
+    }
+    GPIO_WriteBit(dir_port, dir_pin, (payload[2] != 0u) ? Bit_SET : Bit_RESET);
+    if (HardwareTest_Wait(20000u) == 0u) {
+        return COMMAND_RESULT_TEST_STOPPED;
+    }
+    for (pulse = 0u; pulse < pulses; pulse++) {
+        GPIO_SetBits(GPIOC, step_pin);
+        if (HardwareTest_Wait(half_period_us) == 0u) {
+            return COMMAND_RESULT_TEST_STOPPED;
+        }
+        GPIO_ResetBits(GPIOC, step_pin);
+        if (HardwareTest_Wait(half_period_us) == 0u) {
+            return COMMAND_RESULT_TEST_STOPPED;
+        }
+    }
+    return COMMAND_RESULT_DONE;
+}
+
+static uint8_t HardwareTest_Lift(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZE])
+{
+    uint16_t target_mm = Chassis_ReadUInt16(payload[1], payload[2]);
+    uint16_t half_period_us = Chassis_ReadUInt16(payload[3], payload[4]);
+    uint32_t position = (uint32_t)lift_height_mm * LIFT_PULSES_PER_MM +
+                        lift_test_remainder_pulses;
+    uint32_t target = (uint32_t)target_mm * LIFT_PULSES_PER_MM;
+    uint32_t distance = (target > position) ? target - position : position - target;
+    uint8_t ascending = (target > position) ? 1u : 0u;
+    uint8_t result = COMMAND_RESULT_DONE;
+
+    if (target_mm > LIFT_MAX_HEIGHT_MM ||
+        half_period_us < TEST_MIN_HALF_PERIOD_US ||
+        payload[5] != 0u || payload[6] != 0u || payload[7] != 0u) {
+        return COMMAND_RESULT_INVALID;
+    }
+    if (distance == 0u) {
+        return COMMAND_RESULT_DONE;
+    }
+    GPIO_WriteBit(GPIOA, GPIO_Pin_4, (ascending != 0u) ? Bit_SET : Bit_RESET);
+    if (HardwareTest_Wait(20000u) == 0u) {
+        return COMMAND_RESULT_TEST_STOPPED;
+    }
+    while (position != target) {
+        GPIO_SetBits(GPIOB, GPIO_Pin_10);
+        /* Count the issued rising edge, including an interrupted high phase. */
+        if (ascending != 0u) { position++; } else { position--; }
+        if (HardwareTest_Wait(half_period_us) == 0u) {
+            result = COMMAND_RESULT_TEST_STOPPED;
+            break;
+        }
+        GPIO_ResetBits(GPIOB, GPIO_Pin_10);
+        if (HardwareTest_Wait(half_period_us) == 0u) {
+            result = COMMAND_RESULT_TEST_STOPPED;
+            break;
+        }
+    }
+    GPIO_ResetBits(GPIOB, GPIO_Pin_10);
+    lift_height_mm = (uint16_t)(position / LIFT_PULSES_PER_MM);
+    lift_test_remainder_pulses = (uint16_t)(position % LIFT_PULSES_PER_MM);
+    return result;
+}
+
+static uint8_t HardwareTest_IsLiftCommand(uint8_t mode)
+{
+    switch (mode) {
+    case RPI_CMD_GRUB_DISC1: case RPI_CMD_GRUB_DISC2: case RPI_CMD_GRUB_DISC3:
+    case RPI_CMD_GRUB_DISC4: case RPI_CMD_GRUB_DISC5:
+    case RPI_CMD_PUT_DISC1: case RPI_CMD_PUT_DISC2: case RPI_CMD_PUT_DISC3:
+    case RPI_CMD_PUT_DISC4: case RPI_CMD_PUT_DISC5:
+    case RPI_CMD_TASK2_PUT_1TO1: case RPI_CMD_TASK2_PUT_2TO2: case RPI_CMD_TASK2_PUT_3TO3:
+    case RPI_CMD_TASK2_GRUB_CUP1: case RPI_CMD_TASK2_GRUB_CUP2: case RPI_CMD_TASK2_GRUB_CUP3:
+    case RPI_CMD_LIFT_UP: case RPI_CMD_LIFT_DOWN: case RPI_CMD_LIFT_MID:
+    case RPI_CMD_LIFT_178MM: case RPI_CMD_LIFT_186MM: case RPI_CMD_SOFTWARE_INIT:
+    case RPI_CMD_TUNING_LIFT_HEIGHT: case RPI_CMD_CAMERA_TARGET_HIGH:
+    case RPI_CMD_CAMERA_TARGET_LOW: return 1u;
+    default: return 0u;
+    }
+}
+
 static void Chassis_SetDirection(ChassisVector vector, uint8_t reverse)
 {
     if (vector == CHASSIS_VECTOR_FORWARD_BACK) {
+        /* Modes 1/5: physical forward/back with the current wheel wiring. */
         if (reverse == 0u) {
-            GPIO_ResetBits(GPIOG, GPIO_Pin_7); /* FL = 0 */
-            GPIO_SetBits(GPIOG, GPIO_Pin_8);   /* FR = 1 */
-            GPIO_SetBits(GPIOA, GPIO_Pin_8);   /* RL = 1 */
-            GPIO_ResetBits(GPIOC, GPIO_Pin_1); /* RR = 0 */
-        } else {
-            GPIO_SetBits(GPIOG, GPIO_Pin_7);
-            GPIO_ResetBits(GPIOG, GPIO_Pin_8);
-            GPIO_ResetBits(GPIOA, GPIO_Pin_8);
-            GPIO_SetBits(GPIOC, GPIO_Pin_1);
-        }
-    } else if (vector == CHASSIS_VECTOR_LEFT_RIGHT) {
-        /* Validated lateral mapping: FL=0, FR=0, RL=1, RR=1. */
-        if (reverse == 0u) {
-            GPIO_ResetBits(GPIOG, GPIO_Pin_7);
-            GPIO_ResetBits(GPIOG, GPIO_Pin_8);
-            GPIO_SetBits(GPIOA, GPIO_Pin_8);
-            GPIO_SetBits(GPIOC, GPIO_Pin_1);
+            GPIO_ResetBits(GPIOG, GPIO_Pin_7); /* MOTOR3 / physical RR = 0 */
+            GPIO_ResetBits(GPIOG, GPIO_Pin_8); /* MOTOR4 / physical FR = 0 */
+            GPIO_SetBits(GPIOA, GPIO_Pin_8);   /* MOTOR7 / physical FL = 1 */
+            GPIO_SetBits(GPIOC, GPIO_Pin_1);   /* MOTOR8 / physical RL = 1 */
         } else {
             GPIO_SetBits(GPIOG, GPIO_Pin_7);
             GPIO_SetBits(GPIOG, GPIO_Pin_8);
             GPIO_ResetBits(GPIOA, GPIO_Pin_8);
             GPIO_ResetBits(GPIOC, GPIO_Pin_1);
         }
+    } else if (vector == CHASSIS_VECTOR_LEFT_RIGHT) {
+        /* Modes 2/6: physical lateral motion with the current wheel wiring. */
+        if (reverse == 0u) {
+            GPIO_ResetBits(GPIOG, GPIO_Pin_7);
+            GPIO_SetBits(GPIOG, GPIO_Pin_8);
+            GPIO_SetBits(GPIOA, GPIO_Pin_8);
+            GPIO_ResetBits(GPIOC, GPIO_Pin_1);
+        } else {
+            GPIO_SetBits(GPIOG, GPIO_Pin_7);
+            GPIO_ResetBits(GPIOG, GPIO_Pin_8);
+            GPIO_ResetBits(GPIOA, GPIO_Pin_8);
+            GPIO_SetBits(GPIOC, GPIO_Pin_1);
+        }
     } else {
+        /* With MOTOR7=FL, MOTOR4=FR, MOTOR8=RL and MOTOR3=RR, equal DIR
+         * levels form the two pure-rotation directions. */
         if (reverse == 0u) {
             GPIO_ResetBits(GPIOG, GPIO_Pin_7);
             GPIO_ResetBits(GPIOG, GPIO_Pin_8);
@@ -1240,15 +1374,14 @@ static void Chassis_PulseWithRamp(uint32_t pulses,
 
 static void Chassis_Pulse(uint32_t pulses)
 {
-    if (chassis_task2_profile_enabled != 0u) {
-        Chassis_PulseWithRamp(
-            pulses,
-            CHASSIS_ROTATE_SLOW_STEP_HALF_PERIOD_US,
-            CHASSIS_TASK2_STOP_HALF_PERIOD_US,
-            CHASSIS_TASK2_RAMP_PULSES);
-    } else {
-        Chassis_PulseAtHalfPeriod(pulses, CHASSIS_STEP_HALF_PERIOD_US);
-    }
+    /* Rotation and heading correction share the conservative ramp in both
+     * chassis profiles. An abrupt 70 us start can make one wheel lose steps,
+     * which creates translation and invalidates the angle calibration. */
+    Chassis_PulseWithRamp(
+        pulses,
+        CHASSIS_ROTATE_SLOW_STEP_HALF_PERIOD_US,
+        CHASSIS_TASK2_STOP_HALF_PERIOD_US,
+        CHASSIS_TASK2_RAMP_PULSES);
 }
 
 static void Chassis_PulseWithRamp(uint32_t pulses,
@@ -1320,6 +1453,12 @@ static void Chassis_Move(ChassisVector vector,
     delay_ms(CHASSIS_DIRECTION_SETTLE_MS);
     if (amount_is_degrees != 0u) {
         Chassis_Pulse(pulses);
+    } else if (linear_unit_mm == 1u) {
+        /* Modes 5/6 always use their active profile's dedicated fine speed. */
+        Chassis_PulseAtHalfPeriod(pulses,
+            (chassis_task2_profile_enabled != 0u) ?
+                CHASSIS_TASK2_FINE_STEP_HALF_PERIOD_US :
+                CHASSIS_FINE_STEP_HALF_PERIOD_US);
     } else if (linear_distance_mm >= CHASSIS_RAMP_MIN_DISTANCE_MM) {
         if (chassis_task2_profile_enabled != 0u) {
             Chassis_PulseWithRamp(
@@ -1334,9 +1473,6 @@ static void Chassis_Move(ChassisVector vector,
                 CHASSIS_RAMP_START_HALF_PERIOD_US,
                 CHASSIS_RAMP_PULSES);
         }
-    } else if (linear_unit_mm == 1u) {
-        Chassis_PulseAtHalfPeriod(pulses,
-                                  CHASSIS_FINE_STEP_HALF_PERIOD_US);
     } else if (chassis_task2_profile_enabled != 0u) {
         Chassis_PulseWithRamp(
             pulses,
@@ -1810,6 +1946,8 @@ static void Chassis_AlignRotate(float correction_degrees)
         return;
     }
 
+    /* After the wheel-layout correction, +20 deg measured +20.51 deg.
+     * Apply target-minus-actual with the same sign as normal rotation. */
     Chassis_SetDirection(CHASSIS_VECTOR_ROTATE,
                          (correction_degrees < 0.0f) ? 1u : 0u);
     delay_ms(CHASSIS_DIRECTION_SETTLE_MS);
@@ -1856,17 +1994,57 @@ static uint8_t Chassis_MotorAlign(void)
 static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZE])
 {
     uint16_t disc_pulse_us;
+    uint16_t ground_clamp_pulse_us;
+    uint16_t disc_open_pulse_us;
+    uint16_t disc_clamp_pulse_us;
+    uint16_t field_place_height_mm;
     uint16_t podium_height_mm;
     uint16_t tuning_value;
 
     if (servo_tuning_locked != 0u &&
         (payload[0] == RPI_CMD_TUNING_SERVO1_PULSE ||
          payload[0] == RPI_CMD_TUNING_SERVO2_PULSE ||
-         payload[0] == RPI_CMD_TUNING_SERVO3_PULSE)) {
+         payload[0] == RPI_CMD_TUNING_SERVO3_PULSE ||
+         payload[0] == RPI_CMD_TEST_SERVO ||
+         payload[0] == RPI_CMD_TEST_WHEEL ||
+         payload[0] == RPI_CMD_TEST_LIFT)) {
+        return COMMAND_RESULT_INVALID;
+    }
+    /* An interrupted lift test must first finish at a whole-mm test target;
+     * do not silently discard its partial position in competition actions. */
+    if (lift_test_remainder_pulses != 0u && HardwareTest_IsLiftCommand(payload[0]) != 0u) {
         return COMMAND_RESULT_INVALID;
     }
 
     switch (payload[0]) {
+    case RPI_CMD_TEST_WHEEL:
+        return HardwareTest_Wheel(payload);
+    case RPI_CMD_TEST_STOP:
+        HardwareTest_Stop();
+        return COMMAND_RESULT_TEST_STOPPED;
+    case RPI_CMD_TEST_LIFT:
+        return HardwareTest_Lift(payload);
+    case RPI_CMD_TEST_PROBE:
+        return COMMAND_RESULT_TEST_SUPPORTED;
+    case RPI_CMD_TEST_BUTTON:
+        return (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_RESET) ?
+            COMMAND_RESULT_BUTTON_LOW : COMMAND_RESULT_BUTTON_HIGH;
+    case RPI_CMD_TEST_SERVO:
+        tuning_value = Chassis_ReadUInt16(payload[2], payload[3]);
+        if (tuning_value < SERVO_TUNING_MIN_PULSE_US ||
+            tuning_value > SERVO_TUNING_MAX_PULSE_US ||
+            payload[4] != 0u || payload[5] != 0u ||
+            payload[6] != 0u || payload[7] != 0u) {
+            return COMMAND_RESULT_INVALID;
+        }
+        switch (payload[1]) {
+        case 1u: TIM_SetCompare2(TIM5, tuning_value); break;
+        case 2u: TIM_SetCompare3(TIM5, tuning_value); break;
+        case 3u: TIM_SetCompare4(TIM5, tuning_value); break;
+        default: return COMMAND_RESULT_INVALID;
+        }
+        /* ACK means PWM applied; servo position has no feedback sensor. */
+        return COMMAND_RESULT_DONE;
     case RPI_CMD_X_DISTANCE:
         Chassis_Move(CHASSIS_VECTOR_FORWARD_BACK,
                      Chassis_ReadInt16(payload[1], payload[2]),
@@ -1919,14 +2097,30 @@ static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZ
         if (Arm_DiscPulseFromMode(payload[0], &disc_pulse_us) == 0u) {
             return 0u;
         }
+        ground_clamp_pulse_us = SERVO2_CLAMP_PULSE_US;
+        disc_open_pulse_us = SERVO2_DISC_PICK_OPEN_PULSE_US;
+        disc_clamp_pulse_us = SERVO2_CLAMP_PULSE_US;
+        if (Arm_IsCubeDiscMode(payload[0]) != 0u) {
+            ground_clamp_pulse_us = SERVO2_CUBE_GROUND_CLAMP_PULSE_US;
+            disc_open_pulse_us = SERVO2_CUBE_DISC_OPEN_PULSE_US;
+            disc_clamp_pulse_us = SERVO2_CUBE_DISC_CLAMP_PULSE_US;
+        }
         if (Arm_IsPutMode(payload[0]) != 0u) {
+            field_place_height_mm = Arm_FieldPlaceHeightFromMode(payload[0]);
+            if (field_place_height_mm > LIFT_MAX_HEIGHT_MM) {
+                return 0u;
+            }
             Arm_RunPutFromDisc(
                 disc_pulse_us,
-                Arm_DiscPickOpenPulseFromMode(payload[0]),
+                disc_open_pulse_us,
+                disc_clamp_pulse_us,
+                field_place_height_mm,
                 Arm_PutTimingFromMode(payload[0]));
         } else {
             Arm_RunGrubToDisc(disc_pulse_us,
-                              SERVO2_DISC_RELEASE_PULSE_US,
+                              ground_clamp_pulse_us,
+                              LIFT_PLACE_HEIGHT_MM,
+                              LIFT_TRANSFER_HEIGHT_MM,
                               Arm_GrubTimingFromMode(payload[0]));
         }
         return 1u;
@@ -1937,7 +2131,7 @@ static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZ
         if (Arm_Task2ParamsFromMode(payload[0],
                                     &disc_pulse_us,
                                     &podium_height_mm) == 0u ||
-            podium_height_mm > LIFT_MAX_HEIGHT_MM) {
+            podium_height_mm > LIFT_MAX_HEIGHT_MM || Arm_Task2HeightsValid() == 0u) {
             return 0u;
         }
         Arm_RunTask2Place(disc_pulse_us, podium_height_mm,
@@ -1947,21 +2141,16 @@ static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZ
     case RPI_CMD_TASK2_GRUB_CUP1:
     case RPI_CMD_TASK2_GRUB_CUP2:
     case RPI_CMD_TASK2_GRUB_CUP3:
-        if (Arm_Task2GrubPulseFromMode(payload[0], &disc_pulse_us) == 0u) {
+        if (Arm_Task2GrubPulseFromMode(payload[0], &disc_pulse_us) == 0u ||
+            Arm_Task2HeightsValid() == 0u) {
             return 0u;
         }
         Arm_RunGrubToDisc(disc_pulse_us,
-                          SERVO2_DISC_RELEASE_PULSE_US,
+                          SERVO2_CLAMP_PULSE_US,
+                          LIFT_TASK2_DISC_PLACE_HEIGHT_MM,
+                          LIFT_TASK2_TRANSFER_HEIGHT_MM,
                           Arm_Task2GrubTimingFromMode(payload[0]));
         return 1u;
-
-    case RPI_CMD_GRUB_CUBOID_DISC2:
-        Arm_RunGrubCuboid(SERVO3_DISC2_PULSE_US, &cuboid_timing);
-        return COMMAND_RESULT_DONE;
-
-    case RPI_CMD_GRUB_CUBOID_DISC4:
-        Arm_RunGrubCuboid(SERVO3_PUT_DISC4_PULSE_US, &cuboid_timing);
-        return COMMAND_RESULT_DONE;
 
     case RPI_CMD_RESET_ANGLE:
         Gyro_PrepareRuntimeReceiver();
@@ -1987,7 +2176,7 @@ static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZ
         return 1u;
 
     case RPI_CMD_SERVO1_RETRACT:
-        TIM_SetCompare2(TIM5, SERVO1_RETRACT_PULSE_US);
+        TIM_SetCompare2(TIM5, SERVO1_DISC_ALIGN_PULSE_US);
         delay_ms(SERVO_POWER_ON_SETTLE_MS);
         return 1u;
 
@@ -2007,6 +2196,10 @@ static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZ
         TIM_SetCompare3(TIM5, SERVO2_BOTTOM_OPEN_PULSE_US);
         delay_ms(SERVO_POWER_ON_SETTLE_MS);
         return 1u;
+
+    case RPI_CMD_CLAW_CLOSE:
+        Arm_Servo2Move(SERVO2_CLAMP_PULSE_US);
+        return COMMAND_RESULT_DONE;
 
     case RPI_CMD_SOFTWARE_INIT:
         Arm_RunSoftwareInit();
@@ -2047,12 +2240,12 @@ static uint8_t Chassis_HandleCommand(const uint8_t payload[RPI_FRAME_PAYLOAD_SIZ
         Lift_MoveToHeight(tuning_value);
         return COMMAND_RESULT_DONE;
 
-    case RPI_CMD_LIFT_CHAMPION_HEIGHT:
-        Lift_MoveToHeight(LIFT_TASK2_CHAMPION_HEIGHT_MM);
+    case RPI_CMD_CAMERA_TARGET_HIGH:
+        Lift_MoveToHeight(LIFT_CAMERA_TARGET_HIGH_HEIGHT_MM);
         return COMMAND_RESULT_DONE;
 
-    case RPI_CMD_LIFT_RUNNER_UP_HEIGHT:
-        Lift_MoveToHeight(LIFT_TASK2_RUNNER_UP_HEIGHT_MM);
+    case RPI_CMD_CAMERA_TARGET_LOW:
+        Lift_MoveToHeight(LIFT_CAMERA_TARGET_LOW_HEIGHT_MM);
         return COMMAND_RESULT_DONE;
 
     case RPI_CMD_SERVO3_HOME:
@@ -2105,10 +2298,8 @@ int main(void)
             ready_pending = 0u;
             ready_tx_index = 0u;
             command_result = Chassis_HandleCommand(payload);
-            if (command_result == COMMAND_RESULT_DONE) {
-                Chassis_SendStatus(0x01u);
-            } else if (command_result == COMMAND_RESULT_INVALID) {
-                Chassis_SendStatus(0x00u);
+            if (command_result <= COMMAND_RESULT_TEST_SUPPORTED) {
+                Chassis_SendStatus(command_result);
             }
         } else {
             delay_us(UART_RX_POLL_INTERVAL_US);

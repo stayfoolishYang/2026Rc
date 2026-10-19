@@ -2,19 +2,17 @@ from enum import Enum
 
 
 class Mode(Enum):
-    x_distance = 1
-    y_distance = 2
+    x_distance = 1  # 前进/后退，厘米距离
+    y_distance = 2  # 横移，厘米距离
     rotate = 3
     #inform_color = 4
-    x_dis_mm = 5
-    y_dim_mm = 6
+    x_dis_mm = 5  # 前进/后退，毫米微调
+    y_dim_mm = 6  # 横移，毫米微调
     grub_1 = 7
     grub_2 = 8
     grub_3 = 9
     grub_4 = 10
     grub_5 = 12
-    grub_cuboid_2 = 21  # 从地面抓取长方体（预闭合+转台摇摆）放到舵盘2
-    grub_cuboid_4 = 22  # 从地面抓取长方体（预闭合+转台摇摆）放到舵盘4
     put_1 = 14
     put_2 = 15
     put_3 = 16
@@ -44,7 +42,7 @@ class Mode(Enum):
     # 以下九宫格放置模式（put_X_to_Y）与 grub_return(52)、raiseToMid(53)、reception_color(54) 值冲突
     # 2026年 m.py 使用 grub_1to1/2to2/3to3 颁奖台方案，未调用九宫格系列
     put_1_1st = 52
-    grub_return = 52  # 爪子恢复 ⚠️ 与 put_1_1st 值相同
+    grub_return = 52  # Servo1 单独收回到舵盘对位（当前2455 μs）；与 put_1_1st 共用旧值
     put_1_2nd = 53  # 与 raiseToMid 共用旧协议值，保留兼容接口
     raiseToMid = 53   # 摄像头升到中间（圆形纠偏）
     raiseTo178 = 58   # 升降到17.8cm（178mm）
@@ -61,11 +59,15 @@ class Mode(Enum):
     grub_to_2 = 68
     grub_to_3 = 69
     grub_open = 70
+    grub_close = 71
     arm_init = 72
 
-    # 任务2颁奖台单独动作
-    raiseToChampion = 84  # 升降到配置的冠军台高度
-    raiseToRunnerUp = 85  # 升降到配置的亚军台高度
+    # 摄像头打靶高度；任务2领奖台高度仅在mode33/34/35内部使用。
+    raiseToCameraHigh = 84  # 36cm / 360mm
+    raiseToCameraLow = 85   # 18cm / 180mm
+    # 旧调用名保留协议兼容；其实际含义已改为摄像头打靶高度。
+    raiseToChampion = 84
+    raiseToRunnerUp = 85
     turntableHome = 86    # 底部旋转舵机回到24度
     chassisTask2Profile = 87     # 启用任务2独立底盘速度和对称加减速
     chassisSlowSpeed = 87        # 旧名称兼容：等同 chassisTask2Profile

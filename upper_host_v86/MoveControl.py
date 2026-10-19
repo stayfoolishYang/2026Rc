@@ -34,14 +34,14 @@ class MoveControl(object):
         if mode == Mode.x_distance:
             assert x_dis is not None, print("未指定x方向移动距离")
             self.send_buffer[1] = mode.value
-            x_dis_int = int(x_dis)  # 转为整数
+            x_dis_int = round(x_dis)  # 米换算为厘米时避免浮点截断少 1 cm
             self.send_buffer[2] = (x_dis_int >> 8) & 0xFF
             self.send_buffer[3] = x_dis_int & 0xff
 
         elif mode == Mode.y_distance:
             assert y_dis is not None, print("未指定y方向移动距离")
             self.send_buffer[1] = mode.value
-            y_dis_int = int(y_dis)  # 转为整数
+            y_dis_int = round(y_dis)
             self.send_buffer[2] = (y_dis_int >> 8) & 0xFF
             self.send_buffer[3] = y_dis_int & 0xff
 
@@ -90,11 +90,6 @@ class MoveControl(object):
         elif mode == Mode.put_5:
             self.send_buffer[1] = mode.value
 
-        # 从地面抓取长方体（预闭合+转台摇摆）放到舵盘2/4
-        elif mode == Mode.grub_cuboid_2:
-            self.send_buffer[1] = mode.value
-        elif mode == Mode.grub_cuboid_4:
-            self.send_buffer[1] = mode.value
             
             
         # 从三个位置放到冠亚季军台子
@@ -128,8 +123,8 @@ class MoveControl(object):
         elif 47 < mode.value <= 72:
             self.send_buffer[1] = mode.value
 
-        elif mode in (Mode.raiseToChampion,
-                       Mode.raiseToRunnerUp,
+        elif mode in (Mode.raiseToCameraHigh,
+                       Mode.raiseToCameraLow,
                        Mode.turntableHome,
                        Mode.chassisTask2Profile,
                        Mode.chassisTask1Profile,
@@ -182,8 +177,9 @@ class MoveControl(object):
         #print("下位机收到指令")
         time.sleep(0.05)
     
-    # 距离控制，支持x和y同时输入，先运行x再运行y
+    # 距离控制，支持 x 和 y 同时输入；先横移 y，再前后移动 x
     def set_distance(self, x: float = 0, y: float = 0):
+        """按米移动：x 为前后，y 为横移。"""
             
         x = 1e-9 if x == 0 else x
         y = 1e-9 if y == 0 else y
@@ -259,6 +255,7 @@ class MoveControl(object):
  
     # x,y距离微调函数 x,y单位为mm
     def move_in_mm(self, x=0, y=0):
+        """按毫米微调：x 为前后，y 为横移。"""
         x = 128 if x > 128 else int(x)
         x = -127 if x < -127 else int(x)
         y = 128 if y > 128 else int(y)
@@ -300,6 +297,7 @@ class MoveControl(object):
         self.__send_serial_msg(mode=Mode.grub_front)
     # 爪子回复
     def grub_return(self):
+        """mode 52：只将 Servo1 收回到舵盘对位标定（当前2455 μs）。"""
         self.__send_serial_msg(mode=Mode.grub_return)
 
     # 接收颜色识别回传
@@ -357,13 +355,6 @@ class MoveControl(object):
     def grubFromGround5(self):
         self.__send_serial_msg(mode=Mode.grub_5)
 
-    # 从地面抓取长方体（预闭合+转台摇摆）放到舵盘2
-    def grub_cuboid_to_disc2(self):
-        self.__send_serial_msg(mode=Mode.grub_cuboid_2)
-
-    # 从地面抓取长方体（预闭合+转台摇摆）放到舵盘4
-    def grub_cuboid_to_disc4(self):
-        self.__send_serial_msg(mode=Mode.grub_cuboid_4)
         
            
         
@@ -390,11 +381,17 @@ class MoveControl(object):
     def capToDown(self):
         self.__send_serial_msg(mode=Mode.raiseToDown)
 
-    # 任务2颁奖台单独动作
+    # 摄像头打靶高度；mode33/34/35的领奖台高度在STM32任务内处理。
+    def capToCameraHigh(self):
+        self.__send_serial_msg(mode=Mode.raiseToCameraHigh)
+    def capToCameraLow(self):
+        self.__send_serial_msg(mode=Mode.raiseToCameraLow)
     def capToChampion(self):
-        self.__send_serial_msg(mode=Mode.raiseToChampion)
+        """Compatibility alias for the mode84 camera high target."""
+        return self.capToCameraHigh()
     def capToRunnerUp(self):
-        self.__send_serial_msg(mode=Mode.raiseToRunnerUp)
+        """Compatibility alias for the mode85 camera low target."""
+        return self.capToCameraLow()
     def turntable_home(self):
         self.__send_serial_msg(mode=Mode.turntableHome)
 
@@ -490,6 +487,9 @@ class MoveControl(object):
         
     def grub_open(self):
         self.__send_serial_msg(mode=Mode.grub_open)
+
+    def grub_close(self):
+        self.__send_serial_msg(mode=Mode.grub_close)
 
     # 机械臂回到初始位置：底部舵机24度，升降回15cm，夹爪打开，伸缩收回
     def arm_init(self):

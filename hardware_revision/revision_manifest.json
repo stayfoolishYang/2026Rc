@@ -1,0 +1,1402 @@
+{
+  "source": "D:\\文档\\rc\\2026Rc_review_20260908.epro",
+  "source_sha256": "19acd6c6e7a4f44b295dfcdd282db61ac845ed2255a6e4fdf0d42d1f0142ab12",
+  "output": "D:\\文档\\rc\\hardware_revision\\2026Rc_R1b_power.epro",
+  "old_width_length_mm": {
+    "12V": {
+      "30": 83.48,
+      "40": 91.27
+    },
+    "$1N1669": {
+      "40": 7.13
+    },
+    "7.4V": {
+      "25": 54.15,
+      "23": 46.6,
+      "30": 31.26
+    },
+    "5V": {
+      "25": 45.97
+    }
+  },
+  "new_width_length_mm": {
+    "12V": {
+      "80": 139.08,
+      "60": 24.63,
+      "50": 5.73,
+      "40": 5.32
+    },
+    "$1N1669": {
+      "60": 6.66,
+      "50": 0.47
+    },
+    "7.4V": {
+      "60": 96.21,
+      "40": 16.81,
+      "50": 11.0,
+      "30": 3.2,
+      "25": 2.77,
+      "23": 2.02
+    },
+    "5V": {
+      "50": 45.97
+    }
+  },
+  "changes": [
+    {
+      "via": "e112",
+      "old_drill_pad_mil": [
+        12,
+        24
+      ],
+      "new_drill_pad_mil": [
+        20,
+        48
+      ]
+    },
+    {
+      "via": "e113",
+      "old_drill_pad_mil": [
+        12,
+        24
+      ],
+      "new_drill_pad_mil": [
+        20,
+        48
+      ]
+    },
+    {
+      "via": "e114",
+      "old_drill_pad_mil": [
+        12,
+        24
+      ],
+      "new_drill_pad_mil": [
+        12,
+        32
+      ]
+    },
+    {
+      "via": "e115",
+      "old_drill_pad_mil": [
+        12,
+        24
+      ],
+      "new_drill_pad_mil": [
+        20,
+        48
+      ]
+    },
+    {
+      "via": "e116",
+      "old_drill_pad_mil": [
+        12,
+        24
+      ],
+      "new_drill_pad_mil": [
+        20,
+        48
+      ]
+    },
+    {
+      "id": "e166",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.027,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e167",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 8.164,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e177",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.051,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e178",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.735,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.959,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e179",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 1.268,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 1.015,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.522,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 1.015,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.522,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 1.015,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.522,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 1.015,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.522,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 5.58,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e180",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.728,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e187",
+      "net": "$1N1669",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 5.094,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.243,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e188",
+      "net": "$1N1669",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 0.224,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 1.568,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e191",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 0.127,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e192",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.443,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e193",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.991,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.498,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.498,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.997,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.249,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.997,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.498,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.498,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.748,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e194",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.874,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e195",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 7.81,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.504,
+          "width_mil": 30
+        },
+        {
+          "length_mm": 2.267,
+          "width_mil": 25
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 30
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 1.008,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e196",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.101,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.467,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.233,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e197",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 0.241,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.724,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.241,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 1.448,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.241,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.724,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.241,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e198",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 0.718,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e199",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 0.502,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.502,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.753,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.753,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.753,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.502,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.753,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.753,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.251,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.251,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 2.511,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 4.771,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.251,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e200",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 1.293,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e201",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 3.556,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e202",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.129,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e203",
+      "net": "7.4V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 0.713,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e210",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 2.73,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e211",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 2.27,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 30
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 25
+        },
+        {
+          "length_mm": 1.009,
+          "width_mil": 23
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 30
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 30
+        },
+        {
+          "length_mm": 0.252,
+          "width_mil": 25
+        },
+        {
+          "length_mm": 1.009,
+          "width_mil": 23
+        },
+        {
+          "length_mm": 0.504,
+          "width_mil": 30
+        }
+      ]
+    },
+    {
+      "id": "e212",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 0.883,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.221,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.221,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.221,
+          "width_mil": 30
+        }
+      ]
+    },
+    {
+      "id": "e213",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 0.965,
+          "width_mil": 30
+        }
+      ]
+    },
+    {
+      "id": "e214",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 20.549,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e217",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 0.647,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e218",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 2.371,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e219",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 6.629,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e221",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 3.434,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e222",
+      "net": "7.4V",
+      "old_width_mil": 23,
+      "segments": [
+        {
+          "length_mm": 0.421,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e300",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 12.912,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e311",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.5,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e315",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.539,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e316",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 6.196,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e317",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 4.099,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e321",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 1.008,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e322",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.658,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e324",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 2.497,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e325",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 1.301,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e326",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 3.175,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e332",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 2.5,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e333",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 2.463,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e334",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 1.869,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e335",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 33.477,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e336",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 2.981,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e343",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 7.67,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e344",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 3.089,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e349",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.687,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 0.687,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.916,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e350",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.253,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 1.266,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.253,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.76,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.253,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 1.013,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.76,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.253,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 1.013,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.76,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.253,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 1.013,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 1.013,
+          "width_mil": 40
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.253,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 3.544,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e351",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.289,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e352",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 1.894,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e353",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 3.556,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e354",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.124,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e355",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.433,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e392",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 3.984,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e393",
+      "net": "5V",
+      "old_width_mil": 25,
+      "segments": [
+        {
+          "length_mm": 3.098,
+          "width_mil": 50
+        }
+      ]
+    },
+    {
+      "id": "e402",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.506,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 1.012,
+          "width_mil": 50
+        },
+        {
+          "length_mm": 0.759,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.506,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e403",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 0.749,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.497,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.998,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.497,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.998,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.497,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.998,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.497,
+          "width_mil": 60
+        },
+        {
+          "length_mm": 0.998,
+          "width_mil": 80
+        },
+        {
+          "length_mm": 1.248,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e404",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.784,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e409",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 8.191,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e410",
+      "net": "12V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 4.913,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e411",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 3.58,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e412",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 9.006,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e413",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 2.602,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e414",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 5.145,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e415",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 2.171,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e429",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 3.849,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e430",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 0.113,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e431",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 2.5,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e432",
+      "net": "12V",
+      "old_width_mil": 40,
+      "segments": [
+        {
+          "length_mm": 8.254,
+          "width_mil": 80
+        }
+      ]
+    },
+    {
+      "id": "e433",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.5,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e434",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 12.167,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e435",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 1.796,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e436",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.007,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e437",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.367,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "id": "e438",
+      "net": "7.4V",
+      "old_width_mil": 30,
+      "segments": [
+        {
+          "length_mm": 2.31,
+          "width_mil": 60
+        }
+      ]
+    },
+    {
+      "native_drc_fix": "e192",
+      "from_width_mil": 60,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e193",
+      "from_width_mil": 60,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e867",
+      "from_width_mil": 50,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e869",
+      "from_width_mil": 50,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e871",
+      "from_width_mil": 50,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e873",
+      "from_width_mil": 50,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e874",
+      "from_width_mil": 60,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e194",
+      "from_width_mil": 60,
+      "to_width_mil": 40
+    },
+    {
+      "native_drc_fix": "e344",
+      "from_width_mil": 80,
+      "to_width_mil": 60
+    }
+  ],
+  "native_validation": {
+    "app": "LCEDA Pro 3.2.127",
+    "project": "2026Rc_R1b_power",
+    "date": "2026-09-08",
+    "repour": "all 5 GND pours rebuilt",
+    "pcb_drc_errors": 0,
+    "evidence": "Native completed DRC panel showed All (0) after earlier 9 spacing errors were corrected. No rule changes."
+  },
+  "limitations": [
+    "No current rating claimed: load/module specifications unknown",
+    "No added protection or limit circuit; requires separate hardware and firmware design"
+  ],
+  "final_export": "D:\\文档\\rc\\hardware_revision\\2026Rc_R1_DRC_checked.epro",
+  "final_sha256": "af9fc7234e33989c0456cb457077468f1fd7527514fc90188da80a37b96786e0",
+  "export_verification": {
+    "component_placements_and_pin_nets_preserved": true,
+    "board_outline_and_holes_preserved": true,
+    "exported_tracks_match_revision": true,
+    "exported_vias_match_revision": true,
+    "design_rules_preserved": true,
+    "native_copper_generated": true,
+    "schematic_preserved": true
+  },
+  "native_poured_records": 472
+}
